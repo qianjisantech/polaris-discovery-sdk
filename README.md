@@ -1,2 +1,1 @@
-这是一个go的注册中心discovery库
-目前实现功能  服务注册和心跳机制  还没有增加 定时器功能
+Currently, the implemented functions include service registration and heartbeat mechanism, but the timer function has not been added yet
