@@ -46,6 +46,9 @@ func (r *DiscoveryClient) Start(
 	if r.HeartbeatInterval == 0 {
 		r.HeartbeatInterval = 5
 	}
+	if r.HeartbeatInterval > 30 {
+		r.HeartbeatInterval = 30
+	}
 	if registerResp.Success {
 		if onRegisterSuccess != nil {
 			onRegisterSuccess(registerResp)
