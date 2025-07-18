@@ -13,10 +13,11 @@ import (
 
 // DiscoveryClient 注册中心Client结构体
 type DiscoveryClient struct {
-	Addr     string
-	basePath string
-	ticker   *time.Ticker // 保存定时器引用
-	done     chan struct{}
+	Addr              string
+	basePath          string
+	ticker            *time.Ticker // 保存定时器引用
+	done              chan struct{}
+	HeartbeatInterval int //心跳间隔时间
 }
 
 // NewDiscoveryClient 注册中心Client
@@ -41,15 +42,18 @@ func (r *DiscoveryClient) Start(
 		}
 		return err
 	}
-
+	// 保存定时器，避免被 GC 回收
+	if r.HeartbeatInterval == 0 {
+		r.HeartbeatInterval = 5
+	}
 	if registerResp.Success {
 		if onRegisterSuccess != nil {
 			onRegisterSuccess(registerResp)
 		}
 		log.Printf("注册成功: %v", registerResp)
 		if registerResp.Data.IdentificationCode != "" {
-			// 保存定时器，避免被 GC 回收
-			r.ticker = NewTimer(context.Background(), 2*time.Second, func() {
+
+			r.ticker = NewTimer(context.Background(), time.Duration(r.HeartbeatInterval)*time.Second, func() {
 				log.Println("执行心跳任务...")
 				resp, err := client.heatBeat(registerResp.Data.IdentificationCode)
 				if err != nil {
