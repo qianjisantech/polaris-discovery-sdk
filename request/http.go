@@ -39,6 +39,7 @@ func (c *Client) SetHeader(key, value string) {
 func (c *Client) PostJSON(ctx context.Context, path string, body interface{}) ([]byte, error) {
 	fullURL := c.baseURL + path
 	log.Printf("请求地址%s", fullURL)
+	log.Printf("请求参数%s", body)
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
