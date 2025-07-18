@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/qianjisantech/polaris-discovery-sdk/discovery"
+	"github.com/qianjisantech/polaris-discovery-sdk/model"
 	"log"
-	"polaris-discovery/discovery"
-	"polaris-discovery/model"
 	"time"
 )
 

@@ -1,4 +1,4 @@
-module github.com/qianjisantech/polaris-discovery
+module github.com/qianjisantech/polaris-discovery-sdk
 
 go 1.23.9
 
