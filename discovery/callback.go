@@ -1,6 +1,6 @@
 package discovery
 
-import "polaris-discovery/model"
+import "github.com/qianjisantech/polaris-discovery-sdk/model"
 
 type CallbackOptions struct {
 	OnRegisterSuccess  func(*model.RegisterResponse)

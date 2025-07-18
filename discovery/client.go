@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/qianjisantech/polaris-discovery-sdk/model"
+	"github.com/qianjisantech/polaris-discovery-sdk/request"
+	"github.com/qianjisantech/polaris-discovery-sdk/resource"
 	"log"
-	"polaris-discovery/model"
-	"polaris-discovery/request"
-	"polaris-discovery/resource"
 	"time"
 )
 
