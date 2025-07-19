@@ -1,4 +1,4 @@
-package model
+package core
 
 // RegisterRequest 注册请求体
 type RegisterRequest struct {

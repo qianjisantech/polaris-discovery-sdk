@@ -1,4 +1,4 @@
-package discovery
+package config
 
 import (
 	"context"
@@ -50,9 +50,9 @@ func (t *Timer) run(ctx context.Context, task func()) {
 	}
 }
 
-func (r *DiscoveryClient) Stop() {
-	if r.ticker != nil {
-		r.ticker.Stop()
+func (t *Timer) Stop() {
+	if t.ticker != nil {
+		t.ticker.Stop()
 		log.Println("定时器已停止")
 	}
 }

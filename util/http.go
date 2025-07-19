@@ -1,4 +1,4 @@
-package request
+package util
 
 import (
 	"bytes"
@@ -10,15 +10,14 @@ import (
 	"time"
 )
 
-type Client struct {
+type HttpClient struct {
 	baseURL    string
 	httpClient *http.Client
 	headers    map[string]string
 }
 
-func NewClient(baseURL string, timeout time.Duration) *Client {
-	return &Client{
-		baseURL: baseURL,
+func NewHttpClient(timeout time.Duration) *HttpClient {
+	return &HttpClient{
 		httpClient: &http.Client{
 			Timeout: timeout * time.Second, // 延长超时时间
 			Transport: &http.Transport{
@@ -32,14 +31,14 @@ func NewClient(baseURL string, timeout time.Duration) *Client {
 	}
 }
 
-func (c *Client) SetHeader(key, value string) {
+func (c *HttpClient) SetHeader(key, value string) {
 	c.headers[key] = value
 }
 
-func (c *Client) PostJSON(ctx context.Context, path string, body interface{}) ([]byte, error) {
+func (c *HttpClient) PostJSON(ctx context.Context, path string, body interface{}) ([]byte, error) {
 	fullURL := c.baseURL + path
-	log.Printf("请求地址%s", fullURL)
-	log.Printf("请求参数%s", body)
+	log.Printf("请求地址---------->%s", fullURL)
+	log.Printf("请求参数---------->%s", body)
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		return nil, err

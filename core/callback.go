@@ -1,18 +1,16 @@
-package discovery
-
-import "github.com/qianjisantech/polaris-discovery-sdk/model"
+package core
 
 type CallbackOptions struct {
-	OnRegisterSuccess  func(*model.RegisterResponse)
+	OnRegisterSuccess  func(*RegisterResponse)
 	OnRegisterError    func(error)
-	OnHeartbeatSuccess func(*model.HeatBeatResponse)
+	OnHeartbeatSuccess func(*HeatBeatResponse)
 	OnHeartbeatError   func(error)
 }
 
 // Option 函数选项类型
 type Option func(*CallbackOptions)
 
-func WithRegisterSuccess(f func(*model.RegisterResponse)) Option {
+func WithRegisterSuccess(f func(*RegisterResponse)) Option {
 	return func(opts *CallbackOptions) {
 		opts.OnRegisterSuccess = f
 	}
@@ -24,7 +22,7 @@ func WithRegisterError(f func(error)) Option {
 	}
 }
 
-func WithHeartbeatSuccess(f func(*model.HeatBeatResponse)) Option {
+func WithHeartbeatSuccess(f func(*HeatBeatResponse)) Option {
 	return func(opts *CallbackOptions) {
 		opts.OnHeartbeatSuccess = f
 	}
