@@ -9,15 +9,9 @@ import (
 func main() {
 
 	client := &core.DiscoveryClient{
-		Addr:              "http://localhost:8080",
-		HeartbeatInterval: 5,
-		Timeout:           30,
-		Retry: core.Retry{
-			MaxAttempts: 3,
-			Backoff:     2000, // 2秒
-		},
+		Addr: "http://localhost:8080",
 	}
-
+	log.Printf("判断客户端是否已经启动%v", client.IsStopped())
 	err := client.Start(
 		func(resp *core.RegisterResponse) {
 			log.Printf("注册成功! ID: %s", resp.Data.Id)

@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"github.com/qianjisantech/polaris-discovery-sdk/resource"
 	"github.com/qianjisantech/polaris-discovery-sdk/util"
+	"log"
 	"time"
 )
 
 // Register 注册机器
 func (r *DiscoveryClient) register() (*RegisterResponse, error) {
+	log.Printf("进入注册流程")
 	var resourceUsage resource.ResourceUsage
 	getResourceUsage, err := resourceUsage.GetResourceUsage()
 	if err != nil {
@@ -38,8 +40,9 @@ func (r *DiscoveryClient) register() (*RegisterResponse, error) {
 	if r.Timeout > 60 {
 		r.Timeout = 60 // 默认最大超时时间60s
 	}
+	registerUrl := r.Addr + string(RegisterUrl)
 	client := util.NewHttpClient(time.Duration(r.Timeout))
-	res, err := client.PostJSON(context.Background(), string(RegisterUrl), registerRequest)
+	res, err := client.PostJSON(context.Background(), registerUrl, registerRequest)
 	if err != nil {
 		return nil, fmt.Errorf("无法解析注册响应----------> %s", string(res))
 	}

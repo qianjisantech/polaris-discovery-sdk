@@ -29,23 +29,31 @@ type Retry struct {
 }
 
 // NewDiscoveryClient 注册中心Client
-func (r *DiscoveryClient) NewDiscoveryClient() *DiscoveryClient {
+func (r *DiscoveryClient) newDiscoveryClient() *DiscoveryClient {
+	// 复制当前配置
+	client := &DiscoveryClient{
+		Addr:              r.Addr,
+		done:              make(chan struct{}),
+		HeartbeatInterval: r.HeartbeatInterval,
+		Timeout:           r.Timeout,
+		Retry:             r.Retry,
+	}
+
 	// 设置默认重试参数
-	if r.Retry.MaxAttempts <= 0 {
-		r.Retry.MaxAttempts = 3
+	if client.Retry.MaxAttempts <= 0 {
+		client.Retry.MaxAttempts = 3
 	}
-	if r.Retry.MaxAttempts > 100 {
-		r.Retry.MaxAttempts = 100
+	if client.Retry.MaxAttempts > 100 {
+		client.Retry.MaxAttempts = 100
 	}
-	if r.Retry.Backoff <= 0 {
-		r.Retry.Backoff = 500 //默认重试间隔500ms
+	if client.Retry.Backoff <= 0 {
+		client.Retry.Backoff = 500 //默认重试间隔500ms
 	}
-	if r.Retry.Backoff > 500*2000 {
-		r.Retry.Backoff = 500 * 2000 //最大重试间隔500*2000ms
+	if client.Retry.Backoff > 500*2000 {
+		client.Retry.Backoff = 500 * 2000 //最大重试间隔500 * 2000ms
 	}
-	return &DiscoveryClient{
-		done: make(chan struct{}),
-	}
+
+	return client
 }
 
 // registerWithRetry 带重试机制的注册方法
@@ -58,13 +66,11 @@ func (r *DiscoveryClient) registerWithRetry() (*RegisterResponse, error) {
 		case <-r.done:
 			return nil, fmt.Errorf("客户端在注册完成前已停止")
 		default:
-			// 记录当前尝试次数
 			currentAttempt := attempt + 1
 			log.Printf("开始第 %d/%d 次注册尝试", currentAttempt, r.Retry.MaxAttempts)
 
 			resp, lastErr = r.register()
 
-			// 先检查错误
 			if lastErr != nil {
 				log.Printf("注册调用失败 (第 %d/%d 次尝试), 错误: %v",
 					currentAttempt, r.Retry.MaxAttempts, lastErr)
@@ -73,11 +79,9 @@ func (r *DiscoveryClient) registerWithRetry() (*RegisterResponse, error) {
 			} else if !resp.Success {
 				lastErr = fmt.Errorf("服务返回失败: %s", resp.Message)
 			} else {
-				// 注册成功
 				return resp, nil
 			}
 
-			// 如果不是最后一次尝试，则等待后重试
 			if currentAttempt < r.Retry.MaxAttempts {
 				backoff := time.Duration(math.Pow(2, float64(attempt))) *
 					time.Duration(r.Retry.Backoff) * time.Millisecond
@@ -93,10 +97,11 @@ func (r *DiscoveryClient) registerWithRetry() (*RegisterResponse, error) {
 		}
 	}
 
-	// 达到最大重试次数，自动停止客户端
-	r.Stop()
+	// 异步触发停止，避免死锁
+	go r.Stop()
+
 	return resp, fmt.Errorf("注册失败，已达到最大重试次数 %d，最后错误: %v",
-		r.Retry.MaxAttempts, lastErr)
+		r.Retry.MaxAttempts, resp.Message)
 }
 
 func (r *DiscoveryClient) Start(
@@ -106,14 +111,14 @@ func (r *DiscoveryClient) Start(
 	onHeartbeatError func(error),
 ) error {
 	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	if r.stopped {
+		r.mu.Unlock()
 		return fmt.Errorf("客户端已停止")
 	}
-
-	// 使用带重试的注册方法
-	registerResp, err := r.registerWithRetry()
+	r.mu.Unlock()
+	client := r.newDiscoveryClient()
+	// 注册过程不需要持有锁
+	registerResp, err := client.registerWithRetry()
 	if err != nil {
 		if onRegisterError != nil {
 			onRegisterError(err)
@@ -121,12 +126,15 @@ func (r *DiscoveryClient) Start(
 		return fmt.Errorf("注册过程失败: %w", err)
 	}
 
-	// 保存定时器，避免被 GC 回收
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	// 设置心跳间隔
 	if r.HeartbeatInterval <= 0 {
-		r.HeartbeatInterval = 5 // 心跳间隔时间默认5秒
+		r.HeartbeatInterval = 5
 	}
 	if r.HeartbeatInterval > 60*5 {
-		r.HeartbeatInterval = 60 * 5 // 心跳间隔时间最大时间为300秒，也就是5分钟
+		r.HeartbeatInterval = 60 * 5
 	}
 
 	if registerResp.Success {
@@ -174,28 +182,32 @@ func (r *DiscoveryClient) Start(
 	return nil
 }
 
-// Stop 停止客户端，关闭所有后台任务
+// Stop 方法改进版
 func (r *DiscoveryClient) Stop() {
 	r.stopOnce.Do(func() {
-		r.mu.Lock()
-		defer r.mu.Unlock()
+		// 尝试获取锁，最多等待100ms
+		ok := make(chan struct{})
+		go func() {
+			r.mu.Lock()
+			close(ok)
+		}()
 
-		if r.stopped {
-			return
+		select {
+		case <-ok:
+			defer r.mu.Unlock()
+			if r.stopped {
+				return
+			}
+			r.stopped = true
+			if r.ticker != nil {
+				r.ticker.Stop()
+				r.ticker = nil
+			}
+			close(r.done)
+			log.Println("客户端已成功停止")
+		case <-time.After(100 * time.Millisecond):
+			log.Println("警告：停止超时，可能已在停止过程中")
 		}
-
-		r.stopped = true
-
-		// 关闭心跳定时器
-		if r.ticker != nil {
-			r.ticker.Stop()
-			r.ticker = nil
-		}
-
-		// 关闭done通道
-		close(r.done)
-
-		log.Println("客户端已成功停止")
 	})
 }
 

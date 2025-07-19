@@ -42,7 +42,8 @@ func (r *DiscoveryClient) heatBeat(code string) (*HeatBeatResponse, error) {
 		r.Timeout = 60 // 默认最大超时时间60s
 	}
 	client := util.NewHttpClient(time.Duration(r.Timeout))
-	res, err := client.PostJSON(context.Background(), string(HeatBeatUrl)+code, heatBeatRequest)
+	heatbeatUrl := r.Addr + string(HeatBeatUrl)
+	res, err := client.PostJSON(context.Background(), heatbeatUrl+code, heatBeatRequest)
 	if err != nil {
 		return nil, err
 	}
