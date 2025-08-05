@@ -63,7 +63,22 @@ type HeatBeatResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Data    struct {
-		Id   string `json:"id"`
-		Name string `json:"name"`
+		Id    string `json:"id"`
+		Name  string `json:"name"`
+		Tasks struct {
+			Id           string `json:"id"`
+			Name         string `json:"name"`
+			Status       string `json:"status"`
+			ListenPort   int    `json:"listen_port"`
+			CreateTime   string `json:"create_time"`
+			CreateBy     string `json:"create_by"`
+			CreateByName string `json:"create_by_name"`
+			UpdateBy     string `json:"update_by"`
+			UpdateByName string `json:"update_by_name"`
+			UpdateTime   string `json:"update_time"`
+			StartTime    string `json:"start_time"`
+			EndTime      string `json:"end_time"`
+			ExecuteTime  string `json:"execute_time"`
+		} `json:"tasks,omitempty"`
 	} `json:"data,omitempty"`
 }
