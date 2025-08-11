@@ -21,6 +21,8 @@ type DiscoveryClient struct {
 	Timeout           int        // 超时时间间隔 s
 	mu                sync.Mutex // 保护并发访问
 	Retry             Retry
+	Status            string
+	ExecuteStatus     string
 }
 
 type Retry struct {
