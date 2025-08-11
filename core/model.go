@@ -16,6 +16,7 @@ type RegisterRequest struct {
 	NetworkPacketsSent    uint64  `json:"network_packets_sent"`
 	NetworkPacketsReceive uint64  `json:"network_packets_receive"`
 	Status                string  `json:"status"`
+	ExecuteStatus         string  `json:"execute_status"`
 }
 
 // RegisterResponse 注册返回体
@@ -23,20 +24,8 @@ type RegisterResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Data    struct {
-		Id                    string  `json:"id"`
-		IP                    string  `json:"ip"`
-		CPUCores              int     `json:"cpu_cores"`
-		CPUUsedPercent        float64 `json:"cpu_used_percent"`
-		CPUFreePercent        float64 `json:"cpu_free_percent"`
-		MemoryTotal           uint64  `json:"memory_total"`
-		MemoryUsed            uint64  `json:"memory_used"`
-		MemoryFree            uint64  `json:"memory_free"`
-		MemoryUsedPercent     float64 `json:"memory_used_percent"`
-		NetworkBytesSent      float64 `json:"network_bytes_sent"`
-		NetworkBytesReceive   float64 `json:"network_bytes_receive"`
-		NetworkPacketsSent    uint64  `json:"network_packets_sent"`
-		NetworkPacketsReceive uint64  `json:"network_packets_receive"`
-		IdentificationCode    string  `json:"identification_code"`
+		Id                 string `json:"id"`
+		IdentificationCode string `json:"identification_code"`
 	} `json:"data,omitempty"`
 }
 
@@ -44,6 +33,7 @@ type RegisterResponse struct {
 type HeatBeatRequest struct {
 	IP                    string  `json:"ip"`
 	Status                string  `json:"status"`
+	ExecuteStatus         string  `json:"execute_status"`
 	CPUCores              int     `json:"cpu_cores"`
 	CPUUsedPercent        float64 `json:"cpu_used_percent"`
 	CPUFreePercent        float64 `json:"cpu_free_percent"`
